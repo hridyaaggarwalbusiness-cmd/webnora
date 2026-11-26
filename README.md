@@ -1,5 +1,8 @@
 # WebNora digital studio
-A responsive studio website with original amethyst artwork, a Three.js device scene, seven labelled concept case studies, isolated playground demos, a project estimator, PDF export, customer workspace and administration.
+A React web app built with JSX function components and Vite with original amethyst artwork, a Three.js device scene, seven labelled concept case studies, isolated playground demos, a project estimator, PDF export, customer workspace and administration.
+
+## React structure
+The entry point is `src/main.jsx`. Public pages share a React context for published content. The project inquiry form, playground, client workspace and editor use React state and event handlers. Firebase access and Three.js rendering stay in dedicated JavaScript modules.
 
 ## Local development
 Use Node 24 and Java 21 (for Firestore emulator tests). Run `npm ci`, then `npm run dev`. Vite serves the site at http://localhost:4173. Public pages and all playground tools work without credentials. A missing Firebase connection produces an explicit error for sign-in and submissions.

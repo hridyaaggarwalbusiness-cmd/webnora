@@ -14,7 +14,7 @@ if (route === undefined) {
     "/pricing",
     "/playground",
     "/about",
-    "/start",
+    "/start?plan=1",
     "/contact",
     "/portal",
     "/admin",
@@ -68,27 +68,67 @@ if (route === undefined) {
       v = v.bind(w);
     Object.defineProperty(globalThis, k, { value: v, configurable: true });
   }
-  for (const k of [
-    "menu",
-    "results",
-    "shift",
-    "change",
-    "changeCopy",
-    "bookmark",
-    "portfolio",
-    "brochure",
-  ])
-    Object.defineProperty(globalThis, k, {
-      get: () => w.document.getElementById(k),
-      configurable: true,
-    });
+  async function waitFor(check) {
+    for (let i = 0; i < 100; i++) {
+      if (check()) return;
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    assert.fail(
+      "View did not render: " +
+        route +
+        " " +
+        document.body.textContent.slice(-250),
+    );
+  }
+  const clickText = (scope, t) =>
+    Array.from(scope.querySelectorAll("button"))
+      .find((b) => b.textContent === t)
+      .click();
   globalThis.fetch = async () => new Response("{}");
   const entry = html.match(/src="(\/assets\/index-[^"]+\.js)"/)[1];
   await import("../dist" + entry);
-  assert.ok(w.document.querySelector("main h1")?.textContent, route);
+  await waitFor(() => document.querySelector("main h1")?.textContent);
   if (route === "/work") {
     w.document.querySelectorAll(".filters button")[1].click();
-    assert.equal(w.document.querySelectorAll("#portfolio a").length, 3);
+    await waitFor(() => document.querySelectorAll("#portfolio a").length === 3);
   }
+  if (route === "/playground") {
+    clickText(document, "software");
+    await waitFor(() => !document.querySelector("table").closest("[hidden]"));
+    clickText(document, "Delete");
+    await waitFor(() => document.querySelectorAll("tbody tr").length === 1);
+    clickText(document, "websites");
+    await waitFor(() => document.querySelector("#demo"));
+    assert.match(sessionStorage.design, /Aster House/);
+  }
+  if (route.startsWith("/start")) {
+    const main = document.querySelector("main");
+    assert.equal(main.querySelector("select").value, "Application");
+    async function next(step) {
+      clickText(main, "Continue →");
+      await waitFor(
+        () =>
+          main
+            .querySelector("small")
+            .textContent.toLowerCase()
+            .includes(step + "/ 6") ||
+          main.querySelector("form small").textContent.includes(step + " / 6"),
+      );
+    }
+    await next(2);
+    await next(3);
+    main.querySelector("input[type=checkbox]").click();
+    await next(4);
+    await next(5);
+    assert.match(main.textContent, /11,999/);
+    await next(6);
+    assert.ok(main.querySelector("[name=email]").required);
+  }
+  if (["/portal", "/admin"].includes(route))
+    await waitFor(() =>
+      document
+        .querySelector("main [role=status]")
+        ?.textContent.includes("configuration"),
+    );
   process.exit(0);
 }
