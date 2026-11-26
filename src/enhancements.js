@@ -48,7 +48,7 @@ export function enhance({ page, slug, settings, projects, services }) {
       s.insertAdjacentHTML(
         "beforeend",
         "<h3>Design approach</h3><p>" +
-          esc(extra.solution || p[3]) +
+          esc(extra.solution || p[4]) +
           '</p><a class="secondary" href="/services/' +
           services[type][0] +
           '">' +

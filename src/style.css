@@ -697,3 +697,17 @@ video {
     display: none !important;
   }
 }
+.revenue meter {
+  width: min(70%, 400px);
+  height: 20px;
+  accent-color: var(--accent);
+}
+#lab figure {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: #17151f;
+}
+#lab figcaption {
+  margin-bottom: 10px;
+}

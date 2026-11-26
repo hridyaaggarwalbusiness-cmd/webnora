@@ -20,7 +20,11 @@ export function mount(main) {
         ["Mira Reed", 900, "2026-02-01"],
       ],
       Inventory: [["Studio notebooks", 24, "2026-01-12"]],
-      Sales: [["Design consultation", 1600, "2026-02-03"]],
+      Sales: [
+        ["Discovery session", 1000, "2026-01-06"],
+        ["Design consultation", 1600, "2026-02-03"],
+        ["Website design", 4999, "2026-03-12"],
+      ],
     };
   function render() {
     section.innerHTML =
@@ -144,7 +148,7 @@ export function mount(main) {
       };
     } else {
       lab.innerHTML =
-        '<h3>Operations dashboard</h3><div class="filters">' +
+        '<h3>Operations dashboard</h3><figure><figcaption>Revenue by month · demo sales</figcaption><div class="revenue"></div></figure><div class="filters">' +
         Object.keys(records)
           .map((k) => '<button data-key="' + k + '">' + k + "</button>")
           .join("") +
@@ -169,6 +173,29 @@ export function mount(main) {
               (!date || r[2] >= date),
           );
       function rows() {
+        const monthly = new Map();
+        records.Sales.filter((r) => !date || r[2] >= date).forEach((r) => {
+          const month = r[2].slice(0, 7);
+          monthly.set(month, (monthly.get(month) || 0) + r[1]);
+        });
+        const max = Math.max(1, ...monthly.values());
+        lab.querySelector(".revenue").innerHTML =
+          [...monthly.entries()]
+            .sort()
+            .map(
+              ([month, total]) =>
+                "<div><small>" +
+                esc(month) +
+                '</small><meter min="0" max="' +
+                max +
+                '" value="' +
+                total +
+                '"></meter> ₹' +
+                total.toLocaleString("en-IN") +
+                "</div>",
+            )
+            .join("") || "No sales in this period.";
+
         lab.querySelector("tbody").innerHTML = filtered()
           .map(
             ([r, i]) =>
@@ -200,8 +227,10 @@ export function mount(main) {
           (b) =>
             (b.onclick = () => {
               editing = +b.dataset.edit;
-              form.record.value = records[category][editing][0];
-              form.value.value = records[category][editing][1];
+              form.elements.namedItem("record").value =
+                records[category][editing][0];
+              form.elements.namedItem("value").value =
+                records[category][editing][1];
               form.querySelector("button").textContent = "Save changes";
             }),
         );
@@ -211,8 +240,8 @@ export function mount(main) {
       form.onsubmit = (e) => {
         e.preventDefault();
         const r = [
-          form.record.value,
-          Number(form.value.value),
+          form.elements.namedItem("record").value,
+          Number(form.elements.namedItem("value").value),
           new Date().toISOString().slice(0, 10),
         ];
         if (editing < 0) records[category].push(r);
