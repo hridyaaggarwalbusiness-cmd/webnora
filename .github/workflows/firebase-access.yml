@@ -1,0 +1,21 @@
+name: Check Firebase access
+on:
+  push:
+    paths:
+      - .github/workflows/firebase-access.yml
+  workflow_dispatch:
+permissions: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Firebase project access
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "FIREBASE_TOKEN is not available to this workflow."
+            exit 1
+          fi
+          npx --yes firebase-tools@latest projects:list --json > "$RUNNER_TEMP/firebase-projects.json"
+          node -e 'const fs = require("fs"); const r = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (!Array.isArray(r.result)) { console.error("Could not read Firebase project list."); process.exit(1); } if (r.result.some(p => p.projectId === "web-nora")) { console.log("Firebase project web-nora is accessible."); } else { console.error("Firebase project web-nora was not found in the accessible projects."); process.exit(1); }' "$RUNNER_TEMP/firebase-projects.json"
