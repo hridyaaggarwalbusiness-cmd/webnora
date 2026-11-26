@@ -1,0 +1,33 @@
+name: Publish WebNora
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Select the Firebase release to publish
+        required: true
+        type: choice
+        options:
+          - hosting
+          - firestore:rules
+          - storage
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check:ui
+      - name: Publish selected target
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          TARGET: ${{ inputs.target }}
+        run: ./node_modules/.bin/firebase deploy --project web-nora --only "$TARGET" --non-interactive
